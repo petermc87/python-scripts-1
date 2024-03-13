@@ -28,5 +28,6 @@ rawMessage = conn.fetch([21], ['BODY[]', 'FLAGS'])
 message = pyzmail.PyzMessage.factory(rawMessage[21][b'BODY[]'])
 
 # Get the body of the email (text part).
+
 body = message.text_part.get_payload().decode('UTF-8')
 print(body)
