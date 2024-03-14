@@ -42,9 +42,14 @@ def message_check(messages):
                 html_payload = message.html_part.get_payload().decode(message.html_part.charset)
                 # Parse the html doc for the body of the email using beautiful soup.
                 soup = BeautifulSoup(html_payload, 'html.parser')
-
                 text_body = soup.get_text()
+                #
+                ### TODO: USE REGEX TO LOOK FOR WORDS. WHEN MATCHED, DONT DELETE ###
+                ### TODO: CREATE AN IF BASED ON WHETHER THERE WERE MATHCHES OR NOT.
+                ### IF THERE WERE, DONT DELETE.
+                #
                 print(text_body)
+                
         else: return 
     
     
