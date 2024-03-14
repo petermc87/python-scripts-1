@@ -17,9 +17,7 @@ date_obj = datetime.strptime(date_str, "%d-%b-%Y")
 formatted_date_str = date_obj.strftime("%Y-%m-%d")
 
 # Convert data string to datetime object.
-# messages = conn.search('SINCE', formatted_date_str)
 messages = conn.search("ALL")
-# print(messages)
 
 # Fetch an email
 rawMessage = conn.fetch([21], ['BODY[]', 'FLAGS'])
@@ -28,14 +26,21 @@ rawMessage = conn.fetch([21], ['BODY[]', 'FLAGS'])
 # Use pyzmail to retrieve the message info.
 message = pyzmail.PyzMessage.factory(rawMessage[21][b'BODY[]'])
 
-# Get the email in HTML for
-# print(message.html_part)
-html_payload = message.html_part.get_payload().decode(message.html_part.charset)
+# Get subject, from, to and bcc
+print(message.get_addresses('from')[0][1])
+print(message.get_addresses('to')[0][1])
+print(message.get_addresses('bcc'))
+print(message.get_subject())
+
 
 # Make sure the email is html and not plain text type.
 if message.html_part != None:
+    # Get the email in HTML form
+    html_payload = message.html_part.get_payload().decode(message.html_part.charset)
     # Parse the html doc for the body of the email using beautiful soup.
     soup = BeautifulSoup(html_payload, 'html.parser')
 
     text_body = soup.get_text()
     print(text_body)
+    
+    
