@@ -1,6 +1,7 @@
 import imapclient
 import pyzmail
 from datetime import datetime
+from bs4 import BeautifulSoup
 
 conn = imapclient.IMAPClient('imap.gmail.com', ssl=True)
 checker = conn.login('peter@mapandsnap.org', 'ivwp odox lswn ekbz')
@@ -27,7 +28,14 @@ rawMessage = conn.fetch([21], ['BODY[]', 'FLAGS'])
 # Use pyzmail to retrieve the message info.
 message = pyzmail.PyzMessage.factory(rawMessage[21][b'BODY[]'])
 
-# Get the body of the email (text part).
+# Get the email in HTML for
+# print(message.html_part)
+html_payload = message.html_part.get_payload().decode(message.html_part.charset)
 
-body = message.text_part.get_payload().decode('UTF-8')
-print(body)
+# Make sure the email is html and not plain text type.
+if message.html_part != None:
+    # Parse the html doc for the body of the email using beautiful soup.
+    soup = BeautifulSoup(html_payload, 'html.parser')
+
+    text_body = soup.get_text()
+    print(text_body)
