@@ -36,12 +36,6 @@ def word_match(body, addresses, subject, keyword):
     if match:
         print('Keyword found in: ', subject)
 
-    
-    
-    
-    
-
-
 
 #### FUNCTION TO CHECK EACH MESSAGE ####
 def message_check(messages, keyword):
@@ -90,19 +84,31 @@ def message_check(messages, keyword):
 
 
 # Create an input to ask to user what folder to search
-inputted_folder = input('What folder do you want to search: ')
+inputted_folder = 'inbox'
 
-# Input asking for keyword
-keyword = input("Enter a keyword: ")
+keywords = []
 
-# Convert the input to a string and to uppercase
-converted_input = str(inputted_folder).upper()
+enterMore = 'y'
 
-# Pass the message into the get folder function
-returned_messages = get_folder(converted_input)
+while enterMore == 'y':
+    # Input asking for keyword
+    keyword = input("Enter a keyword: ").lower()
+    keywords.append(keyword)
+    enterMore = input("Do you want to enter more keywords? (y/n): ").lower()
+    
 
-# Return the message information contained within each
-message_check(returned_messages, keyword)
+print(keywords)
+
+
+#### UNCOMMENT TO RUN THE CHEKCER ####
+# # Convert the input to a string and to uppercase
+# converted_input = str(inputted_folder).upper()
+
+# # Pass the message into the get folder function
+# returned_messages = get_folder(converted_input)
+
+# # Return the message information contained within each
+# message_check(returned_messages, keyword)
 
 
 
