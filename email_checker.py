@@ -19,7 +19,7 @@ def get_folder(folder):
     # print(messages)
 
 
-def word_match(body, addresses, subject, keyword):
+def word_match(body, addresses, subject, keywords):
     
     # Combine the strings
     email = f'{addresses} {subject} {body}'
@@ -28,7 +28,15 @@ def word_match(body, addresses, subject, keyword):
     # NOTE: The escape is used to escape special characters so that they
     # dont affect the regular expression syntax. \b is used to search a 
     # whole word.
-    keywordRegex = re.compile(r'\b' + re.escape(keyword) + r'\b')
+    # keywordRegex = re.compile(r'\b' + re.escape(keywords) + r'\b')
+    # 1. r -> Raw string literal, 
+    # 2. \b -> Matching the boundary between a word and non word
+    # 3. '|'.join(map(re.escape, keywords) -> This is using the escape on characters that may 
+    # appear in the word that could affect the regex function.
+    # 4. r')\b -> Ending of the boundary between a word that is not part of a larger word.
+    pattern = r'\b(?:' + '|'.join(map(re.escape, keywords)) + r')\b'
+    
+    keywordRegex = re.compile(pattern)
     
     # Checking for a match
     match = keywordRegex.search(email)
@@ -38,7 +46,7 @@ def word_match(body, addresses, subject, keyword):
 
 
 #### FUNCTION TO CHECK EACH MESSAGE ####
-def message_check(messages, keyword):
+def message_check(messages, keywords):
 
     for i in messages:
         ### TEST ONLY 3 ###
@@ -76,7 +84,7 @@ def message_check(messages, keyword):
             #
             ## Pass in the message body, addresses and subject to the word_match function.
             
-        word_match(text_body, addresses, subject, keyword)
+        word_match(text_body, addresses, subject, keywords)
                 
     else: return 
     
@@ -88,27 +96,24 @@ inputted_folder = 'inbox'
 
 keywords = []
 
-enterMore = 'y'
+enter_more = 'y'
 
-while enterMore == 'y':
+while enter_more == 'y':
     # Input asking for keyword
     keyword = input("Enter a keyword: ").lower()
     keywords.append(keyword)
-    enterMore = input("Do you want to enter more keywords? (y/n): ").lower()
+    enter_more = input("Do you want to enter more keywords? (y/n): ").lower()
     
 
-print(keywords)
+### UNCOMMENT TO RUN THE CHEKCER ####
+# Convert the input to a string and to uppercase
+converted_input = str(inputted_folder).upper()
 
+# Pass the message into the get folder function
+returned_messages = get_folder(converted_input)
 
-#### UNCOMMENT TO RUN THE CHEKCER ####
-# # Convert the input to a string and to uppercase
-# converted_input = str(inputted_folder).upper()
-
-# # Pass the message into the get folder function
-# returned_messages = get_folder(converted_input)
-
-# # Return the message information contained within each
-# message_check(returned_messages, keyword)
+# Return the message information contained within each
+message_check(returned_messages, keywords)
 
 
 
