@@ -2,6 +2,7 @@ import imapclient
 import pyzmail
 import re
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor
 
 conn = imapclient.IMAPClient('imap.gmail.com', ssl=True)
 checker = conn.login('peter@mapandsnap.org', 'ivwp odox lswn ekbz')
@@ -41,52 +42,49 @@ def word_match(body, addresses, subject, keywords):
     # Checking for a match
     match = keywordRegex.search(email)
     
+    # if match:
+    #     print('Keyword found in: ', subject)
     if match:
-        print('Keyword found in: ', subject)
+        return True
+    return False
 
 
 #### FUNCTION TO CHECK EACH MESSAGE ####
-def message_check(messages, keywords):
+def message_check(messageId):
 
-    for i in messages:
-        ### TEST ONLY 3 ###
-        # if i < 20:
-        # Fetch an email
-        rawMessage = conn.fetch([i], ['BODY[]', 'FLAGS'])
-        # print(rawMessage)
+    global keywords
+    print(messageId, keywords) # --> ARGUMENTS GETTING PASSED.
+    # for i in messages:
+    # Fetch an email
+    rawMessage = conn.fetch([messageId], ['BODY[]', 'FLAGS'])
+    
+    print(rawMessage)
+    
+    
+    # Use pyzmail to retrieve the message info.
+    messageBody = pyzmail.PyzMessage.factory(rawMessage[messageId][b'BODY[]'])
 
-        # Use pyzmail to retrieve the message info.
-        message = pyzmail.PyzMessage.factory(rawMessage[i][b'BODY[]'])
+    # Get subject, from, to and bcc
+    addresses = messageBody.get_addresses('from')[0][1], messageBody.get_addresses('to')[0][1], messageBody.get_addresses('bcc')
+    subject = messageBody.get_subject()
 
-        # Get subject, from, to and bcc
-        #
-        #### TEST ####
-        # print(message.get_addresses('from')[0][1], message.get_addresses('to')[0][1], message.get_addresses('bcc'))
-        # print(message.get_subject())
+
+    # print(messageBody, addresses, subject) # --> NOTHING RETURNED.
+    # Make sure the email is html and not plain text type.
+    if messageBody.html_part != None:
+        # Get the email in HTML form
+        html_payload = messageBody.html_part.get_payload().decode(messageBody.html_part.charset)
+        # Parse the html doc for the body of the email using beautiful soup.
+        soup = BeautifulSoup(html_payload, 'html.parser')
+        text_body = soup.get_text()
+        if word_match(text_body, addresses, subject, keywords):
+            print('Keyword found in: ', subject)
             
-        addresses = message.get_addresses('from')[0][1], message.get_addresses('to')[0][1], message.get_addresses('bcc')
-        subject = message.get_subject()
-
-        # Make sure the email is html and not plain text type.
-        if message.html_part != None:
-            # Get the email in HTML form
-            html_payload = message.html_part.get_payload().decode(message.html_part.charset)
-            # Parse the html doc for the body of the email using beautiful soup.
-            soup = BeautifulSoup(html_payload, 'html.parser')
-            text_body = soup.get_text()
-            #
-            ### TODO: USE REGEX TO LOOK FOR WORDS. WHEN MATCHED, DONT DELETE ###
-            # INPUT ASKING FOR A WORD
-                
-            ### TODO: CREATE AN IF BASED ON WHETHER THERE WERE MATHCHES OR NOT.
-            ### IF THERE WERE, DONT DELETE.
-            # print(text_body)
-            #
-            ## Pass in the message body, addresses and subject to the word_match function.
             
-        word_match(text_body, addresses, subject, keywords)
+        #     # Check if a word match gets returned
+        # word_match(text_body, addresses, subject, keywords)
                 
-    else: return 
+    # else: return 
     
     
 
@@ -105,15 +103,22 @@ while enter_more == 'y':
     enter_more = input("Do you want to enter more keywords? (y/n): ").lower()
     
 
-### UNCOMMENT TO RUN THE CHEKCER ####
-# Convert the input to a string and to uppercase
-converted_input = str(inputted_folder).upper()
 
 # Pass the message into the get folder function
-returned_messages = get_folder(converted_input)
+returned_messages = get_folder(inputted_folder)
 
+
+# Use threadpool to check multiple messages at once (parallelism).
+# NOTE: This will mean that the regex expression will only be
+# compiled once, which is happening in the loop (for) within the
+# the message check method.
+with ThreadPoolExecutor() as executor:
+    executor.map(lambda messageId: message_check(messageId), returned_messages)
+    
+    
+    
 # Return the message information contained within each
-message_check(returned_messages, keywords)
+# message_check(returned_messages, keywords)
 
 
 
